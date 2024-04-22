@@ -34,6 +34,7 @@
                     .attr('fill',() => '#'+ Math.floor(Math.random()*16777215).toString(16))
                     .on('mousedown touchstart', function(){
                         d3.select(this).classed('paused',true);
+                        d3.select(this).raise()
                     })
                     .on('mouseup touchend', function(){
                         d3.select(this).classed('paused',false);
@@ -56,19 +57,19 @@
             if(!d3.select(this).classed('paused')){
                 return Math.random()*100;
             }else {
-                return +d3.select(this).attr('r');
+                return d3.select(this).attr('r');
             }}) 
         .attr('cx', function(){
             if(!d3.select(this).classed('paused')){
                 return Math.random()*width
             }else {
-                return +d3.select(this).attr('cx');
+                return d3.select(this).attr('cx');
             }})
         .attr('cy', function(){
             if(!d3.select(this).classed('paused')){
                 return Math.random()*height
             }else {
-                return +d3.select(this).attr('cy');
+                return d3.select(this).attr('cy');
             }})
         .attr('fill', function(){
             if(!d3.select(this).classed('paused')){
