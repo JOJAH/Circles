@@ -31,7 +31,17 @@
                     .attr('r', () => Math.random()*100)
                     .attr('cx', () => Math.random()*width)
                     .attr('cy', () => Math.random()*height)
-                    .attr('fill',() => '#'+ Math.floor(Math.random()*16777215).toString(16));
+                    .attr('fill',() => '#'+ Math.floor(Math.random()*16777215).toString(16))
+                    .on('mousedown', function(){
+                        d3.select(this).classed('paused',true);
+                    })
+                    .on('mouseup', function(){
+                        d3.select(this).classed('paused',false);
+                    })
+                    .on('mouseleave', function(){
+                        d3.select(this).classed('paused',false);
+                    })
+
     /* updates the svg if window size changes */
     function updateDimensions(){
         width = window.innerWidth;
@@ -42,16 +52,33 @@
     function updateBlobs(){
         blobs.transition()
         .duration(2000)
-        .attr('r', ()=> Math.random()*100)
-        .attr('cx', () => Math.random()*width)
-        .attr('cy', () => Math.random()*height)
-        .attr('fill',() => { /* used rgb as hex method used initially in blobs creation changes the colours during the transition and at the end */
-             const r = Math.floor(Math.random() * 256);
-             const g = Math.floor(Math.random() * 256);
-             const b = Math.floor(Math.random() * 256);
-             return `rgb(${r}, ${g}, ${b})`;
-           })
-
+        .attr('r', function(){
+            if(!d3.select(this).classed('paused')){
+                return Math.random()*100;
+            }else {
+                return +d3.select(this).attr('r');
+            }}) 
+        .attr('cx', function(){
+            if(!d3.select(this).classed('paused')){
+                return Math.random()*width
+            }else {
+                return +d3.select(this).attr('cx');
+            }})
+        .attr('cy', function(){
+            if(!d3.select(this).classed('paused')){
+                return Math.random()*height
+            }else {
+                return +d3.select(this).attr('cy');
+            }})
+        .attr('fill', function(){
+            if(!d3.select(this).classed('paused')){
+                const r = Math.floor(Math.random() * 256);  
+                const g = Math.floor(Math.random() * 256);
+                const b = Math.floor(Math.random() * 256);
+                return `rgb(${r}, ${g}, ${b})`;
+            }else {
+                return d3.select(this).attr('fill');  /* used rgb as hex method used initially in blobs creation changes the colours during the transition and at the end */
+            }})
         .on('end', updateBlobs)
     }
     
