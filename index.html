@@ -32,10 +32,10 @@
                     .attr('cx', () => Math.random()*width)
                     .attr('cy', () => Math.random()*height)
                     .attr('fill',() => '#'+ Math.floor(Math.random()*16777215).toString(16))
-                    .on('mousedown', function(){
+                    .on('mousedown touchstart', function(){
                         d3.select(this).classed('paused',true);
                     })
-                    .on('mouseup', function(){
+                    .on('mouseup touchend', function(){
                         d3.select(this).classed('paused',false);
                     })
                     .on('mouseleave', function(){
