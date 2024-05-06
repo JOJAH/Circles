@@ -8,11 +8,72 @@
     <style>
         body{
             margin: 0;
+            font-family: Arial, sans-serif;
         }
         svg{
             display: block;
             background-color: black;
         }
+        #menuButtonContainer{
+            display: inline;
+            opacity: 0;
+            position: fixed;
+            bottom: 10px;
+            width: 40px;
+            height: 40px;
+            left: 50%;
+            cursor: pointer;
+            transition: bottom 1s, opacity 1s;
+        }
+        .menuButtonBar{
+            width: 35px;
+            height: 5px;
+            background-color: white;
+            margin: 6px 0;
+
+        }
+        #menu{
+            display: flex;
+            position: fixed;
+            width: 100%;
+            height: 0px;
+            bottom: 0px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: height 1s;
+            overflow: hidden;
+        }
+        .sliderContainer{
+            width: 50%;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        #amount{
+            position: absolute;
+            right: 0;
+            bottom: 50%;
+        }
+        #amountLabel{
+            position: absolute;
+            right: 0;
+            bottom: 35%;
+        }
+        #speed{
+            transform: rotate(-90deg);
+            height: 100%;
+        }
+        #speedLabel{
+            position: absolute;
+            bottom: 40%;
+            left: 15%;
+        }
+        label{
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -20,28 +81,12 @@
 <script>
     let width = window.innerWidth;
     let height = window.innerHeight;
+
+    let circleNumber = 20
+    let circleSpeed = 3000
     const svg = d3.select('svg')
             .attr('width', width)
             .attr('height', height);
-
-    const blobs = svg.selectAll('circle')
-                    .data(d3.range(20))
-                    .enter()
-                    .append('circle')
-                    .attr('r', () => Math.random()*100)
-                    .attr('cx', () => Math.random()*width)
-                    .attr('cy', () => Math.random()*height)
-                    .attr('fill',() => '#'+ Math.floor(Math.random()*16777215).toString(16))
-                    .on('mousedown touchstart', function(){
-                        d3.select(this).classed('paused',true);
-                        d3.select(this).raise()
-                    })
-                    .on('mouseup touchend', function(){
-                        d3.select(this).classed('paused',false);
-                    })
-                    .on('mouseleave', function(){
-                        d3.select(this).classed('paused',false);
-                    })
 
     /* updates the svg if window size changes */
     function updateDimensions(){
@@ -51,8 +96,37 @@
             .attr('height', height);
     }
     function updateBlobs(){
+        blobs = svg.selectAll('circle')
+            /*update circle number*/
+            .data(d3.range(circleNumber));
+            /*removes excess circles with fade*/
+            blobs.exit()
+            .transition()
+            .duration(1000)
+            .style('opacity',0)
+            .remove();
+
+        /* creates new circles */
+        const newBlobs = blobs.enter().append('circle')
+            .attr('cx', function(){ return Math.random() * width;})
+            .attr('cy', function(){ return Math.random() * height;});
+        /* adds touch circle function */
+        newBlobs.on('mousedown touchstart', function(){
+                        d3.select(this).classed('paused',true);
+                        d3.select(this).interrupt();
+                    })
+                    .on('mouseup touchend', function(){
+                        d3.select(this).classed('paused',false);
+                    })
+                    .on('mouseleave', function(){
+                        d3.select(this).classed('paused',false);
+                    });
+        /*adds newly added to existing*/
+        blobs = newBlobs.merge(blobs);
+
         blobs.transition()
-        .duration(2000)
+        .duration(circleSpeed)
+        .style('opacity',1)
         .attr('r', function(){
             if(!d3.select(this).classed('paused')){
                 return Math.random()*100;
@@ -78,13 +152,87 @@
                 const b = Math.floor(Math.random() * 256);
                 return `rgb(${r}, ${g}, ${b})`;
             }else {
-                return d3.select(this).attr('fill');  /* used rgb as hex method used initially in blobs creation changes the colours during the transition and at the end */
+                return d3.select(this).attr('fill');
             }})
+        
         .on('end', updateBlobs)
     }
-    
+
+    function openMenu(){
+        const menu = document.getElementById('menu');
+        const menuButton = document.getElementById('menuButtonContainer')   
+        if(menu.style.height !== '20%'){
+            menu.style.height = '20%';
+            menuButton.style.bottom = '20%';
+        }else{
+            menu.style.height = '0px';
+            menuButton.style.bottom = '10px';
+        }
+    }
+    /* menu button appearing and disspearing */
+    document.addEventListener('mousemove', function(){
+        const menuButton = document.getElementById('menuButtonContainer')   
+        if (typeof timer !=="undefined"){
+            clearTimeout(timer);
+        }else{};
+        
+        menuButton.style.opacity = '1';
+        menuButton.pointerEvents = 'auto';
+        
+        timer = setTimeout(()=>{
+            menuButton.style.opacity = '0';
+            menuButton.pointerEvents = 'none';
+        },2000);
+        
+    });
+
+    /* window resizing*/
     window.addEventListener('resize', updateDimensions);
+    /* initial start the circles moving */
     updateBlobs(); 
 </script>
+
+<div id="menuButtonContainer" onclick="openMenu()">
+    <div class="menuButtonBar"></div>
+    <div class="menuButtonBar"></div>
+    <div class="menuButtonBar"></div>
+</div>
+
+<div id="menu">
+    <div class="sliderContainer">
+        <label id="amountLabel">Number of Circles: <span id="amountValue">20</span> </label>
+        <input type="range" id="amount" min="1" max="30" value="20" onmouseup="
+            circleNumber = this.value;
+            amountValue = document.getElementById('amountValue');
+            amountValue.textContent = circleNumber
+            updateBlobs()
+            "
+        ontouchend=" 
+            circleNumber = this.value;
+            amountValue = document.getElementById('amountValue');
+            amountValue.textContent = circleNumber
+            updateBlobs()
+        ">
+        
+    </div>
+    <div  class="sliderContainer">
+        
+        <input type="range" id="speed" min="1" max="5" value="3" onmouseup="
+            circleSpeed = this.value * 1000;
+            speedValue = document.getElementById('speedValue');
+            speedValue.textContent = this.value;
+            updateBlobs()
+            "
+            ontouchend="
+                circleSpeed = this.value * 1000;
+                speedValue = document.getElementById('speedValue');
+                speedValue.textContent = this.value;
+                updateBlobs()
+            ">
+        <label id="speedLabel">Speed: <span id="speedValue">3</span> seconds</label>
+    </div>
+
+</div>
+
 </body>
 </html>
